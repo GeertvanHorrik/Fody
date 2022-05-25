@@ -142,11 +142,16 @@ namespace Fody
         /// </summary>
         [Obsolete("Use WriteError", false)]
         public Action<string, SequencePoint?> LogErrorPoint { get; set; } = (m, p) => { };
-
+        
         /// <summary>
         /// Handler for resolving <see cref="AssemblyDefinition"/>s.
         /// </summary>
         public Func<string, AssemblyDefinition?> ResolveAssembly { get; set; } = null!;
+
+        /// <summary>
+        /// The current <see cref="IAssemblyResolver"/>s.
+        /// </summary>
+        public IAssemblyResolver AssemblyResolver { get; set; } = null!;
 
         /// <summary>
         /// An instance of <see cref="Mono.Cecil.ModuleDefinition"/> for processing.
@@ -208,6 +213,15 @@ namespace Fody
         /// This list will be actively synced back to the build system, i.e. adding or removing items from this list will modify the @(ReferenceCopyLocalPaths) list of the current build.
         /// </remarks>
         public List<string> ReferenceCopyLocalPaths { get; set; } = new List<string>();
+
+        /// <summary>
+        /// A list of all the runtime references marked as copy-local.
+        /// A copy of the contents of the @(RuntimeCopyLocalItems).
+        /// </summary>
+        /// <remarks>
+        /// This list will be actively synced back to the build system, i.e. adding or removing items from this list will modify the @(RuntimeCopyLocalItems) list of the current build.
+        /// </remarks>
+        public List<string> RuntimeCopyLocalPaths { get; set; } = new List<string>();
 
         /// <summary>
         /// A list of all the msbuild constants.

@@ -59,6 +59,7 @@ namespace Fody
             weaver.FindType = typeCache.FindType;
             weaver.TryFindType = typeCache.TryFindType;
             weaver.ResolveAssembly = assemblyResolver.Resolve;
+            weaver.AssemblyResolver = assemblyResolver;
             var readerParameters = new ReaderParameters
             {
                 AssemblyResolver = assemblyResolver,
@@ -75,7 +76,7 @@ namespace Fody
                 beforeExecuteCallback?.Invoke(module);
 
                 weaver.Execute();
-                ReferenceCleaner.CleanReferences(module, weaver, weaver.LogDebug);
+                ReferenceCleaner.CleanReferences(module, weaver, weaver.ReferenceCopyLocalPaths, weaver.RuntimeCopyLocalPaths, weaver.LogDebug);
 
                 afterExecuteCallback?.Invoke(module);
 
