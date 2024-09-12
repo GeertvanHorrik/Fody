@@ -1,8 +1,7 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Xunit;
 
 public class AssemblyVersionTests
 {
@@ -11,7 +10,7 @@ public class AssemblyVersionTests
     {
         var asm = Assembly.Load("FodyCommon");
         var attrs = asm.GetCustomAttributes(typeof(AssemblyFileVersionAttribute));
-        var asmFileVersionAttribute = (AssemblyFileVersionAttribute)attrs.FirstOrDefault();
+        var asmFileVersionAttribute = (AssemblyFileVersionAttribute?)attrs.FirstOrDefault();
 
         Assert.NotNull(asmFileVersionAttribute);
 

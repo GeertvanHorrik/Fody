@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-
-static class AssemblyExtensions
+﻿static class AssemblyExtensions
 {
     public static string GetVersion(this Assembly assembly)
     {
@@ -24,7 +20,7 @@ static class AssemblyExtensions
     private static TAttibute? GetAssemblyAttribute<TAttibute>(Assembly assembly)
         where TAttibute : Attribute
     {
-        var attibutes = assembly.GetCustomAttributes(typeof(TAttibute))?.ToArray() ?? Array.Empty<Attribute>();
+        var attibutes = assembly.GetCustomAttributes(typeof(TAttibute))?.ToArray() ?? [];
         return attibutes.Length > 0 ? attibutes[0] as TAttibute : null;
     }
 }

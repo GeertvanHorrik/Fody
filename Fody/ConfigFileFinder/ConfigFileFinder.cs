@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
-
-public static class ConfigFileFinder
+﻿public static class ConfigFileFinder
 {
     const string FodyWeaversConfigFileName = "FodyWeavers.xml";
     static readonly XNamespace schemaNamespace = XNamespace.Get("http://www.w3.org/2001/XMLSchema");
@@ -18,7 +11,7 @@ public static class ConfigFileFinder
         if (File.Exists(solutionConfigFilePath))
         {
             logger.LogDebug($"Found path to weavers file '{solutionConfigFilePath}'.");
-            yield return new WeaverConfigFile(solutionConfigFilePath, true);
+            yield return new(solutionConfigFilePath, true);
         }
 
         var projectConfigFilePath = Path.Combine(projectDirectory, FodyWeaversConfigFileName);
@@ -26,13 +19,13 @@ public static class ConfigFileFinder
         if (File.Exists(projectConfigFilePath))
         {
             logger.LogDebug($"Found path to weavers file '{projectConfigFilePath}'.");
-            yield return new WeaverConfigFile(projectConfigFilePath);
+            yield return new(projectConfigFilePath);
         }
 
         if (!string.IsNullOrEmpty(weaverConfiguration))
         {
             logger.LogDebug("Found weaver configuration in project.");
-            yield return new WeaverConfigFile(XDocumentEx.Parse(weaverConfiguration!));
+            yield return new(XDocumentEx.Parse(weaverConfiguration!));
         }
     }
 
@@ -52,8 +45,7 @@ public static class ConfigFileFinder
                     executionOrders.Add(elementName, executionOrder = executionOrders.Count);
                 }
 
-                entries[elementName] = new WeaverConfigEntry
-                (
+                entries[elementName] = new(
                     executionOrder: executionOrder,
                     configFile: configFile,
                     elementName: elementName,
@@ -71,7 +63,7 @@ public static class ConfigFileFinder
 
         if (File.Exists(projectConfigFilePath))
         {
-            return new WeaverConfigFile(projectConfigFilePath);
+            return new(projectConfigFilePath);
         }
 
         var root = new XElement("Weavers", SchemaInstanceAttributes);
@@ -99,7 +91,7 @@ public static class ConfigFileFinder
             CreateSchemaForConfig(projectConfigFilePath, weaverEntries);
         }
 
-        return new WeaverConfigFile(projectConfigFilePath);
+        return new(projectConfigFilePath);
     }
 
     static void CreateSchemaForConfig(string projectConfigFilePath, IEnumerable<WeaverEntry> weavers)
@@ -172,7 +164,9 @@ public static class ConfigFileFinder
         try
         {
             if (!File.Exists(projectConfigFilePath))
+            {
                 return;
+            }
 
             var doc = XDocumentEx.Load(projectConfigFilePath);
             if (!ShouldGenerateXsd(doc, defaultGenerateXsd))
@@ -210,9 +204,8 @@ public static class ConfigFileFinder
     }
 
     static XAttribute[] SchemaInstanceAttributes =>
-        new[]
-        {
-            new XAttribute(XNamespace.Xmlns + "xsi", schemaInstanceNamespace.NamespaceName),
-            new XAttribute(schemaInstanceNamespace.GetName("noNamespaceSchemaLocation"), "FodyWeavers.xsd"),
-        };
+    [
+        new(XNamespace.Xmlns + "xsi", schemaInstanceNamespace.NamespaceName),
+        new(schemaInstanceNamespace.GetName("noNamespaceSchemaLocation"), "FodyWeavers.xsd")
+    ];
 }

@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using Fody;
-
-internal class InternalClass: BaseModuleWeaver
+class InternalClass: BaseModuleWeaver
 {
     public override void Execute()
     {

@@ -1,8 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
-using Fody;
-
 #if (NETSTANDARD)
 using StrongNameKeyPair = Mono.Cecil.StrongNameKeyPair;
 #else
@@ -36,7 +31,7 @@ public partial class InnerWeaver
                 {
                     Logger.LogDebug("Extract public key from key file for signing.");
 
-                    StrongNameKeyPair = new StrongNameKeyPair(fileBytes);
+                    StrongNameKeyPair = new(fileBytes);
                     // Ensure that we can generate the public key from the key file. This requires the private key to
                     // work. If we cannot generate the public key, an ArgumentException will be thrown. In this case,
                     // the assembly is delay-signed with a public only key-file.
@@ -72,7 +67,7 @@ public partial class InnerWeaver
         var assemblyKeyFileAttribute = ModuleDefinition
             .Assembly
             .CustomAttributes
-            .FirstOrDefault(x => x.AttributeType.Name == "AssemblyKeyFileAttribute");
+            .FirstOrDefault(_ => _.AttributeType.Name == "AssemblyKeyFileAttribute");
         if (assemblyKeyFileAttribute != null)
         {
             var keyFileSuffix = (string)assemblyKeyFileAttribute.ConstructorArguments.First().Value;

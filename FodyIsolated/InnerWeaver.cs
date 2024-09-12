@@ -1,14 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 #if NET472
 using System.Runtime.Remoting;
 #endif
-using Fody;
-using Mono.Cecil;
 using Mono.Cecil.Pdb;
 using Mono.Cecil.Rocks;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
@@ -37,7 +30,7 @@ public partial class InnerWeaver :
     public IsolatedAssemblyLoadContext LoadContext { get; set; } = null!;
 #endif
     bool cancelRequested;
-    List<WeaverHolder> weaverInstances = new List<WeaverHolder>();
+    List<WeaverHolder> weaverInstances = new();
     Action? cancelDelegate;
     public IAssemblyResolver assemblyResolver = null!;
 
@@ -64,7 +57,7 @@ public partial class InnerWeaver :
             return typeof(PdbReaderProvider).Assembly;
         }
 
-        foreach (var weaverPath in Weavers.Select(x => x.AssemblyPath))
+        foreach (var weaverPath in Weavers.Select(_ => _.AssemblyPath))
         {
             var directoryName = Path.GetDirectoryName(weaverPath);
             var assemblyFileName = $"{assemblyName}.dll";
@@ -99,15 +92,15 @@ public partial class InnerWeaver :
             assemblyResolver = new AssemblyResolver(Logger, SplitReferences);
             ReadModule();
             var weavingInfoClassName = GetWeavingInfoClassName();
-            if (ModuleDefinition.Types.Any(x => x.Name == weavingInfoClassName))
+            if (ModuleDefinition.Types.Any(_ => _.Name == weavingInfoClassName))
             {
                 Logger.LogWarning($"The assembly has already been processed by Fody. Weaving aborted. Path: {AssemblyFilePath}");
                 return;
             }
-            TypeCache = new TypeCache(assemblyResolver.Resolve);
+            TypeCache = new(assemblyResolver.Resolve);
             InitialiseWeavers();
             ValidatePackageReferenceSettings(weaverInstances, Logger);
-            TypeCache.BuildAssembliesToScan(weaverInstances.Select(x => x.Instance));
+            TypeCache.BuildAssembliesToScan(weaverInstances.Select(_ => _.Instance));
             InitialiseTypeSystem();
             ExecuteWeavers();
             AddWeavingInfo();
@@ -213,13 +206,17 @@ public partial class InnerWeaver :
                 }
                 catch (FileNotFoundException exception) when (exception.Message.Contains(nameof(ValueTuple)))
                 {
-                    throw new Exception($@"Failed to execute weaver {weaver.Config.AssemblyPath} due to a failure to load ValueTuple.
-This is a known issue with in dotnet (https://github.com/dotnet/runtime/issues/27533).
-The recommended work around is to avoid using ValueTuple inside a weaver.", exception);
+                    throw new(
+                        $"""
+                         Failed to execute weaver {weaver.Config.AssemblyPath} due to a failure to load ValueTuple.
+                         This is a known issue with in dotnet (https://github.com/dotnet/runtime/issues/27533).
+                         The recommended work around is to avoid using ValueTuple inside a weaver.
+                         """,
+                        exception);
                 }
                 catch (Exception exception)
                 {
-                    throw new Exception($"Failed to execute weaver {weaver.Config.AssemblyPath}", exception);
+                    throw new($"Failed to execute weaver {weaver.Config.AssemblyPath}", exception);
                 }
 
                 Logger.LogDebug($"Finished '{weaver.Config.ElementName}' in {startNew.ElapsedMilliseconds}ms");
@@ -315,20 +312,19 @@ The recommended work around is to avoid using ValueTuple inside a weaver.", exce
     void DisposeWeavers()
     {
         foreach (var disposable in weaverInstances
-            .Select(x => x.Instance)
+            .Select(_ => _.Instance)
+            // ReSharper disable once SuspiciousTypeConversion.Global
             .OfType<IDisposable>())
         {
             disposable.Dispose();
         }
     }
 
-    public sealed override object? InitializeLifetimeService()
-    {
+    public sealed override object? InitializeLifetimeService() =>
         // Returning null designates an infinite non-expiring lease.
         // We must therefore ensure that RemotingServices.Disconnect() is called when
         // it's no longer needed otherwise there will be a memory leak.
-        return null;
-    }
+        null;
 
     public void Dispose()
     {

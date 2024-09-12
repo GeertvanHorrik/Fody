@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-
 public partial class InnerWeaver
 {
-    static Dictionary<string, Assembly> assemblies = new Dictionary<string, Assembly>(StringComparer.OrdinalIgnoreCase);
+    static Dictionary<string, Assembly> assemblies = new(StringComparer.OrdinalIgnoreCase);
 
     public Assembly LoadWeaverAssembly(string assemblyPath)
     {
@@ -20,11 +16,18 @@ public partial class InnerWeaver
 
     Assembly LoadFromFile(string assemblyPath)
     {
-        #if(NETSTANDARD)
-        return LoadContext.LoadNotLocked(assemblyPath);
-        #else
-        var rawAssembly = System.IO.File.ReadAllBytes(assemblyPath);
-        return Assembly.Load(rawAssembly);
-        #endif
+        try
+        {
+#if NETSTANDARD
+            return LoadContext.LoadNotLocked(assemblyPath);
+#else
+            var rawAssembly = File.ReadAllBytes(assemblyPath);
+            return Assembly.Load(rawAssembly);
+#endif
+        }
+        catch (Exception ex)
+        {
+            throw new WeavingException($"Could not load weaver assembly from {assemblyPath}: {ex.Message}");
+        }
     }
 }

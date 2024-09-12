@@ -6,7 +6,6 @@ using Mono.Cecil;
 using VerifyXunit;
 using Xunit;
 
-[UsesVerify]
 public class WeaverTestHelperTests
 {
     [Fact]
@@ -17,9 +16,8 @@ public class WeaverTestHelperTests
         return Verify(result);
     }
 
-    Task Verify(TestResult result)
-    {
-        return Verifier.Verify(new
+    static Task Verify(TestResult result) =>
+        Verifier.Verify(new
         {
             result.Errors,
             result.Messages,
@@ -27,7 +25,6 @@ public class WeaverTestHelperTests
             result.AssemblyPath,
             result.Assembly.FullName
         });
-    }
 
     [Fact]
     public Task WithCustomAssemblyName()
@@ -65,7 +62,12 @@ public class WeaverTestHelperTests
         var assemblyPath = Path.Combine(Environment.CurrentDirectory, "DummyAssembly.dll");
         var weaver = new WeaverUsingSymbols();
         var result = weaver.ExecuteTestRun(assemblyPath, writeSymbols: true);
-        var module = ModuleDefinition.ReadModule(assemblyPath, new ReaderParameters {ReadSymbols = true});
+        var module = ModuleDefinition.ReadModule(
+            assemblyPath,
+            new()
+            {
+                ReadSymbols = true
+            });
         Assert.True(module.HasSymbols);
 
         return Verify(result);
